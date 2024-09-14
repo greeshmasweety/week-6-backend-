@@ -1,0 +1,169 @@
+db.createCollection("Products")
+db.createCollection("Orders")
+db.createCollection("Customers")
+{ ok: 1 }
+db.Products.insertMany([
+  {
+    ProductID: 1,
+    Name: "Laptop",
+    Category: "Electronics",
+    Price: 1200.00,
+    Stock: 50
+  },
+  {
+    ProductID: 2,
+    Name: "Smartphone",
+    Category: "Electronics",
+    Price: 800.00,
+    Stock: 100
+  },
+  {
+    ProductID: 3,
+    Name: "Coffee Maker",
+    Category: "Home Appliances",
+    Price: 100.00,
+    Stock: 30
+  }
+])
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('66e504f251e70f5f85a3024d'),
+    '1': ObjectId('66e504f251e70f5f85a3024e'),
+    '2': ObjectId('66e504f251e70f5f85a3024f')
+  }
+}
+db.Products.find({ Category: "Electronics" })
+{
+  _id: ObjectId('66e504f251e70f5f85a3024d'),
+  ProductID: 1,
+  Name: 'Laptop',
+  Category: 'Electronics',
+  Price: 1200,
+  Stock: 50
+}
+{
+  _id: ObjectId('66e504f251e70f5f85a3024e'),
+  ProductID: 2,
+  Name: 'Smartphone',
+  Category: 'Electronics',
+  Price: 800,
+  Stock: 100
+}
+{
+  OrderID: 101,
+  ProductID: 1,
+  Quantity: 2
+}
+SyntaxError: Missing semicolon. (3:11)
+
+  1 | {
+  2 |   OrderID: 101,
+> 3 |   ProductID: 1,
+    |            ^
+  4 |   Quantity: 2
+  5 | }
+  6 |
+db.Orders.find({ OrderID: 101 }).forEach(function(order) {
+  db.Products.updateOne(
+    { ProductID: order.ProductID },
+    { $inc: { Stock: -order.Quantity } }
+  )
+})
+db.Products.deleteMany({ Stock: 0 })
+{
+  acknowledged: true,
+  deletedCount: 0
+}
+db.Products.find({
+  Price: { $gte: 100, $lte: 1000 },
+  Stock: { $gt: 0 }
+})
+{
+  _id: ObjectId('66e504f251e70f5f85a3024e'),
+  ProductID: 2,
+  Name: 'Smartphone',
+  Category: 'Electronics',
+  Price: 800,
+  Stock: 100
+}
+{
+  _id: ObjectId('66e504f251e70f5f85a3024f'),
+  ProductID: 3,
+  Name: 'Coffee Maker',
+  Category: 'Home Appliances',
+  Price: 100,
+  Stock: 30
+}
+db.Products.find({
+  $or: [
+    { Price: { $lte: 500 } },
+    { Rating: { $gte: 4 } }
+  ]
+})
+{
+  _id: ObjectId('66e504f251e70f5f85a3024f'),
+  ProductID: 3,
+  Name: 'Coffee Maker',
+  Category: 'Home Appliances',
+  Price: 100,
+  Stock: 30
+}
+db.Products.find({}).sort({ Price: 1 })
+{
+  _id: ObjectId('66e504f251e70f5f85a3024f'),
+  ProductID: 3,
+  Name: 'Coffee Maker',
+  Category: 'Home Appliances',
+  Price: 100,
+  Stock: 30
+}
+{
+  _id: ObjectId('66e504f251e70f5f85a3024e'),
+  ProductID: 2,
+  Name: 'Smartphone',
+  Category: 'Electronics',
+  Price: 800,
+  Stock: 100
+}
+{
+  _id: ObjectId('66e504f251e70f5f85a3024d'),
+  ProductID: 1,
+  Name: 'Laptop',
+  Category: 'Electronics',
+  Price: 1200,
+  Stock: 50
+}
+db.Products.aggregate([
+  {
+    $group: {
+      _id: null,
+      averagePrice: { $avg: "$Price" }
+    }
+  }
+])
+{
+  _id: null,
+  averagePrice: 700
+}
+db.Orders.aggregate([
+  {
+    $lookup: {
+      from: "Products",
+      localField: "ProductID",
+      foreignField: "ProductID",
+      as: "productDetails"
+    }
+  },
+  {
+    $unwind: "$productDetails"
+  },
+  {
+    $group: {
+      _id: "$productDetails.Category",
+      totalRevenue: { $sum: { $multiply: ["$Quantity", "$productDetails.Price"] } }
+    }
+  }
+])
+
+
